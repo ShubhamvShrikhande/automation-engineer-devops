@@ -1,0 +1,56 @@
+name: CI-CD-EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPO: demo-app
+  AWS_ACCOUNT_ID: 061051257034
+  CLUSTER_NAME: demo-eks
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build Docker image
+      run: docker build -t demo-app ./minimal-flask-example
+
+    - name: Tag image
+      run: |
+        docker tag demo-app:latest \
+        061051257034.dkr.ecr.ap-south-1.amazonaws.com/demo-app:latest
+
+    - name: Push image to ECR
+      run: |
+        docker push \
+        061051257034.dkr.ecr.ap-south-1.amazonaws.com/demo-app:latest
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+        --region ap-south-1 \
+        --name demo-eks
+
+    - name: Deploy to EKS
+      run: |
+        kubectl set image deployment/demo-app demo-app=061051257034.dkr.ecr.ap-south-1.amazonaws.com/demo-app:latest || \
+        kubectl create deployment demo-app --image=061051257034.dkr.ecr.ap-south-1.amazonaws.com/demo-app:latest
+
+        kubectl expose deployment demo-app --type=NodePort --port=80 || true
