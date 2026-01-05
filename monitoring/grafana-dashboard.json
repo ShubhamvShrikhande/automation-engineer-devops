@@ -1,0 +1,48 @@
+{
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Node CPU Usage",
+      "targets": [
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (instance)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Node Memory Usage",
+      "targets": [
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Pod CPU Usage",
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total[5m])) by (pod)",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Pod Memory Usage",
+      "targets": [
+        {
+          "expr": "sum(container_memory_usage_bytes) by (pod) / 1024 / 1024",
+          "refId": "D"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "title": "Kubernetes & Node Resource Monitoring",
+  "version": 1
+}
