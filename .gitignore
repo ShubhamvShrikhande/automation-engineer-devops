@@ -1,3 +1,4 @@
 largefile_test/
 bash/files/
 *.log
+.terraform/
